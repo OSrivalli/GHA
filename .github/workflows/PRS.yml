@@ -3,32 +3,33 @@ name: Artifact PRs
 on:
   workflow_dispatch:
     inputs:
-       base_branch:
-         description: 'Base branch'
-         required: true
-         default: 'main'
-       compare_branch:
-         description: 'Compare branch'
-         required: true
-         default: 'develop'
-runs-on: ubuntu-latest
+      base_branch:
+        description: 'Base branch'
+        required: true
+        default: 'main'
+      compare_branch:
+        description: 'Compare branch'
+        required: true
+        default: 'develop'
 
 jobs:
   list_prs:
+    runs-on: ubuntu-latest
     steps:
-    - name: Fetch main branch
-      shell: bash
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Fetch branches
       run: |
-      git fetch origin main
-  get_diff:
-    steps:
+        git fetch origin ${{ github.event.inputs.base_branch }}
+        git fetch origin ${{ github.event.inputs.compare_branch }}
+
     - name: Calculate PR diff
-      shell: bash
       run: |
-      git diff origin/main..develop > mydiff
-  artifact:
-    - name: Artifact the diff
+        git diff origin/${{ github.event.inputs.base_branch }}..origin/${{ github.event.inputs.compare_branch }} > mydiff.txt
+
+    - name: Upload diff as artifact
       uses: actions/upload-artifact@v3
       with:
-        name: pr-list
-        path: pr-list.txt
+        name: pr-diff
+        path: mydiff.txt
