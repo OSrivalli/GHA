@@ -11,14 +11,17 @@ on:
          description: 'Compare branch'
          required: true
          default: 'develop'
+runs-on: ubuntu-latest
+
 jobs:
-  list-prs:
-    runs-on: ubuntu-latest
+  list_prs:
     steps:
     - name: Fetch main branch
       shell: bash
       run: |
       git fetch origin main
+  get_diff:
+    steps:
     - name: Calculate PR diff
       shell: bash
       run: |
