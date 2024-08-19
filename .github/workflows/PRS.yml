@@ -27,8 +27,8 @@ jobs:
     - name: Calculate PR diff
       run: |
         git diff origin/${{ github.event.inputs.base_branch }}..origin/${{ github.event.inputs.compare_branch }} > mydiff.txt
-        sh 'echo "Diff of branches ...."'
-        sh "cat mydiff.txt"
+        echo "Diff of branches ...."
+        cat mydiff.txt
     - name: Upload diff as artifact
       uses: actions/upload-artifact@v3
       with:
