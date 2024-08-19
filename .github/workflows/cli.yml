@@ -1,4 +1,4 @@
-name: List Merged PRs
+name: List Merged PRs from cli
 
 on:
   workflow_dispatch:
