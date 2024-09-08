@@ -1,0 +1,44 @@
+name: List Merged PRs from cli
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: 'Base branch'
+        required: true
+        default: 'main'
+      compare_branch:
+        description: 'Compare branch'
+        required: true
+        default: 'develop'
+
+jobs:
+  list_merged_prs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up GitHub CLI
+      uses: cli/cli-action@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get list of merged PRs
+      id: get_prs
+      run: |
+        # Fetch input variables
+        base_branch="${{ github.event.inputs.base_branch }}"
+        compare_branch="${{ github.event.inputs.compare_branch }}"
+
+        # List PRs that are merged into the base branch from the compare branch
+        # The GitHub CLI `gh` command does not support direct filtering by base and compare branches.
+        # Therefore, we need to list all merged PRs into the base branch and then filter by compare branch.
+        gh pr list --state merged --base $base_branch --json number,title,headRefName -q '
+        [.[] | select(.headRefName == env.compare_branch) | "PR #\(.number): \(.title)"]' > merged_prs.txt
+
+    - name: Upload merged PRs text file
+      uses: actions/upload-artifact@v3
+      with:
+        name: merged-prs
+        path: merged_prs.txt
