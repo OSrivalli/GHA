@@ -19,7 +19,7 @@ jobs:
       - name: Get PRs between commits
         id: get_prs
         run: |
-          COMMITS=$(git log --format="%H" COMMIT1^..COMMIT2)
+          COMMITS=$(git log --format="%H" 4c679cd7f70d8f2bf04eb14f14a35c182f12228e^..91605e8bbee32f89472e43a792249e5c0c94a077)
           echo "Commits between COMMIT1 and COMMIT2: $COMMITS"
           
           PRS=$(gh pr list --search "$COMMITS")
