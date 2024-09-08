@@ -1,0 +1,39 @@
+name: Merge PRs Between Commits
+
+on:
+  push:
+    branches:
+      - main  # Change this to the branch you want to monitor
+
+jobs:
+  merge-prs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Fetch all commits
+        run: git fetch --prune --unshallow
+        
+      - name: Get PRs between commits
+        id: get_prs
+        run: |
+          COMMITS=$(git log --format="%H" 4c679cd7f70d8f2bf04eb14f14a35c182f12228e^..91605e8bbee32f89472e43a792249e5c0c94a077)
+          echo "Commits between COMMIT1 and COMMIT2: $COMMITS"
+          
+          PRS=$(gh pr list --search "$COMMITS")
+          echo "Pull Requests between commits: $PRS"
+          
+          echo "PRS_LIST<<EOF" >> $GITHUB_ENV
+          echo "$PRS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        
+      - name: Merge PRs
+        run: |
+          for pr in ${{ env.PRS_LIST }}
+          do
+            gh pr merge "$pr" --merge
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
