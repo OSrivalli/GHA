@@ -1,0 +1,58 @@
+name: PR Check for Words in Files
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get PR files
+        id: pr_files
+        run: |
+          # Get the list of files changed in the PR
+          echo "::set-output name=files::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})"
+
+      - name: Load words from check.txt
+        id: load_words
+        run: |
+          # Load the words from check.txt into an array
+          check_words=$(cat check.txt | tr '\n' ' ')
+
+          # Save them as an output
+          echo "::set-output name=check_words::$check_words"
+
+      - name: Check for words in PR files
+        id: check_files
+        run: |
+          # Loop through each file changed in the PR
+          changed_files="${{ steps.pr_files.outputs.files }}"
+          found_words=""
+
+          for file in $changed_files; do
+            if [[ -f "$file" ]]; then
+              # Search for the words in the file
+              for word in ${{ steps.load_words.outputs.check_words }}; do
+                if grep -q "$word" "$file"; then
+                  found_words="$found_words\n$file contains the word: $word"
+                fi
+              done
+            fi
+          done
+
+          # If any words were found, store them for reporting
+          echo "::set-output name=found_words::$found_words"
+
+      - name: Post comment on PR if words are found
+        if: steps.check_files.outputs.found_words != ''
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            The following words were found in the PR:
+            ${{ steps.check_files.outputs.found_words }}
